@@ -5,12 +5,13 @@ interface Challan {
   challan_number: number;
   date: Date;
   from: string;
-  grade: string;
+  size: string;
   type: string;
   color: string;
   remarks: string;
   quantity: number;
   weight: number;
+  isDispatch: boolean;
 }
 
 const challanSchema: Schema<Challan> = new Schema(
@@ -25,8 +26,8 @@ const challanSchema: Schema<Challan> = new Schema(
       min: [1, "Quantity must be greater than 0"],
     },
     date: { type: Date, required: true },
-    from: { type: String, required: true },
-    grade: { type: String },
+    from: { type: String, required: true }, // company name
+    size: { type: String },
     type: { type: String, required: true },
     color: { type: String, required: true },
     remarks: { type: String },
@@ -40,6 +41,7 @@ const challanSchema: Schema<Challan> = new Schema(
       required: true,
       min: [1, "Weight must be greater than 0"],
     },
+    isDispatch: { type: Boolean, default: false },
   },
   {
     timestamps: true,

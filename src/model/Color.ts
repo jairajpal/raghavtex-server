@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 interface Color {
   userId: Schema.Types.ObjectId;
+  isDispatch: boolean;
   name: string;
 }
 
@@ -11,6 +12,7 @@ const colorSchema: Schema<Color> = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
     },
+    isDispatch: { type: Boolean, default: false },
     name: { type: String, required: true },
   },
   {

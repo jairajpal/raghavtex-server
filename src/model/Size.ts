@@ -1,12 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 
-interface Company {
+interface Size {
   userId: Schema.Types.ObjectId;
   isDispatch: boolean;
   name: string;
 }
 
-const companySchema: Schema<Company> = new Schema(
+const sizeSchema: Schema<Size> = new Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,9 +16,9 @@ const companySchema: Schema<Company> = new Schema(
     name: { type: String, required: true },
   },
   {
-    timestaps: true,
+    timestamps: true,
     versionKey: false,
   }
 );
 
-module.exports = mongoose.model("company", companySchema);
+module.exports = mongoose.model("size", sizeSchema);

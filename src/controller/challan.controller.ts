@@ -5,6 +5,8 @@ const Model = require("../model/index");
 
 export const createUserChallan = async (req: Request, res: Response) => {
   try {
+    req.body.isDispatch = req.body.isDispatch || false;
+
     req.body.data.map(async (data: any) => {
       data.date = req.body.date;
       data.from = req.body.from;
@@ -12,21 +14,41 @@ export const createUserChallan = async (req: Request, res: Response) => {
       data.challan_number = parseInt(req.body.challan_number);
       data.quantity = parseInt(data.quantity);
       data.weight = parseFloat(data.weight);
+      data.isDispatch = req.body.isDispatch;
       if (data.type) {
         let check = await Model.Type.findOne({
           name: data.type,
+          isDispatch: req.body.isDispatch,
         });
         if (!check)
-          await Model.Type.create({ name: data.type, userId: req.body.userId });
+          await Model.Type.create({
+            name: data.type,
+            userId: req.body.userId,
+            isDispatch: req.body.isDispatch,
+          });
       }
       if (data.color) {
         let check = await Model.Color.findOne({
           name: data.color,
+          isDispatch: req.body.isDispatch,
         });
         if (!check)
           await Model.Color.create({
             name: data.color,
             userId: req.body.userId,
+            isDispatch: req.body.isDispatch,
+          });
+      }
+      if (data.size) {
+        let check = await Model.Color.findOne({
+          name: data.size,
+          isDispatch: req.body.isDispatch,
+        });
+        if (!check)
+          await Model.Size.create({
+            name: data.size,
+            userId: req.body.userId,
+            isDispatch: req.body.isDispatch,
           });
       }
     });
@@ -34,11 +56,13 @@ export const createUserChallan = async (req: Request, res: Response) => {
     if (req.body.data[0].from) {
       let check = await Model.Company.findOne({
         name: req.body.data[0].from,
+        isDispatch: req.body.isDispatch,
       });
       if (!check)
         await Model.Company.create({
           name: req.body.data[0].from,
           userId: req.body.userId,
+          isDispatch: req.body.isDispatch,
         });
     }
     let challan = await Model.Challan.insertMany(req.body.data);
@@ -77,7 +101,9 @@ export const getUserChallansByUserId = async (req: any, res: Response) => {
     const fromFilter = req.query.fromFilter;
     const typeFilter = req.query.typeFilter;
     const colorFilter = req.query.colorFilter;
-    const gradeFilter = req.query.gradeFilter || "";
+    const sizeFilter = req.query.sizeFilter || "";
+    const isDispatch =
+      req.query.isDispatch.toLowerCase() === "false" ? false : true;
 
     const pipeline = [];
 
@@ -97,9 +123,10 @@ export const getUserChallansByUserId = async (req: any, res: Response) => {
       if (colorFilter && colorFilter.length) {
         pipeline.push({ $match: { color: { $in: colorFilter } } });
       }
-      if (gradeFilter) {
-        pipeline.push({ $match: { grade: gradeFilter } });
+      if (sizeFilter) {
+        pipeline.push({ $match: { size: sizeFilter } });
       }
+      pipeline.push({ $match: { isDispatch: isDispatch } });
     }
 
     const challan = await Model.Challan.aggregate(pipeline);
@@ -147,16 +174,34 @@ export const getUserChallansByUserId = async (req: any, res: Response) => {
 
 export const getDropDownFilter = async (req: any, res: Response) => {
   try {
-    let color = await Model.Color.find({}).sort({ _id: -1 }).lean().exec();
-    let type = await Model.Type.find({}).sort({ _id: -1 }).lean().exec();
-    let from = await Model.Company.find({}).sort({ _id: -1 }).lean().exec();
+    const isDispatch =
+      req.query.isDispatch.toLowerCase() === "false" ? false : true;
+    let color = await Model.Color.find({ isDispatch })
+      .sort({ _id: -1 })
+      .lean()
+      .exec();
+    let type = await Model.Type.find({ isDispatch })
+      .sort({ _id: -1 })
+      .lean()
+      .exec();
+    let from = await Model.Company.find({ isDispatch })
+      .sort({ _id: -1 })
+      .lean()
+      .exec();
+    let size = await Model.Size.find({ isDispatch })
+      .sort({ _id: -1 })
+      .lean()
+      .exec();
 
     if (req.user._id !== req.query.userId) {
-      return res
-        .status(401)
-        .send(
-          generateResponse(401, "unauthorised request", { color, type, from })
-        );
+      return res.status(401).send(
+        generateResponse(401, "unauthorised request", {
+          color,
+          type,
+          from,
+          size,
+        })
+      );
     }
 
     return res.status(200).send(
@@ -164,6 +209,7 @@ export const getDropDownFilter = async (req: any, res: Response) => {
         color,
         type,
         from,
+        size,
       })
     );
   } catch (error: any) {
@@ -175,10 +221,12 @@ export const getDropDown = async (req: any, res: Response) => {
   try {
     const search = req.query.search;
     const type = req.query.type;
+    const isDispatch = req.query.isDispatch || false;
     let data;
     if (type === "from") {
       data = await Model.Company.find({
         name: { $regex: new RegExp(search, "i") },
+        isDispatch,
       })
         .sort({ _id: -1 })
         .lean()
@@ -186,6 +234,7 @@ export const getDropDown = async (req: any, res: Response) => {
     } else if (type === "color") {
       data = await Model.Color.find({
         name: { $regex: new RegExp(search, "i") },
+        isDispatch,
       })
         .sort({ _id: -1 })
         .lean()
@@ -193,6 +242,15 @@ export const getDropDown = async (req: any, res: Response) => {
     } else if (type === "type") {
       data = await Model.Type.find({
         name: { $regex: new RegExp(search, "i") },
+        isDispatch,
+      })
+        .sort({ _id: -1 })
+        .lean()
+        .exec();
+    } else if (type === "size") {
+      data = await Model.Size.find({
+        name: { $regex: new RegExp(search, "i") },
+        isDispatch,
       })
         .sort({ _id: -1 })
         .lean()
