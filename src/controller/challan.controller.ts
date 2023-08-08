@@ -91,6 +91,46 @@ export const editUserChallan = async (req: Request, res: Response) => {
   }
 };
 
+export const createCompany = async (req: Request, res: Response) => {
+  try {
+    let company = await Model.Company.create(req.body);
+
+    return res
+      .status(201)
+      .send(generateResponse(201, "Company added successfully", company));
+  } catch (err: any) {
+    return res.status(500).send(generateResponse(500, err.message, {}));
+  }
+};
+
+export const editCompany = async (req: Request, res: Response) => {
+  try {
+    let company = await Model.Company.findOneAndUpdate(
+      { _id: req.body._id },
+      req.body,
+      { upsert: true }
+    );
+
+    return res
+      .status(201)
+      .send(generateResponse(201, "Company edited successfully", company));
+  } catch (err: any) {
+    return res.status(500).send(generateResponse(500, err.message, {}));
+  }
+};
+
+export const getCompany = async (req: Request, res: Response) => {
+  try {
+    let company = await Model.Company.find({ isDelete: false });
+
+    return res
+      .status(201)
+      .send(generateResponse(201, "Company fetched successfully", company));
+  } catch (err: any) {
+    return res.status(500).send(generateResponse(500, err.message, {}));
+  }
+};
+
 export const getUserChallansByUserId = async (req: any, res: Response) => {
   try {
     const challanNumberFilter = parseInt(req.query.challanNumberFilter);
